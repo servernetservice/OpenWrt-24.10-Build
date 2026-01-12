@@ -86,14 +86,13 @@ jobs:
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
     - name: Check space usage
-      if: (!cancelled())
+      if: ${{ !cancelled() }}
       run: df -hT
 
     - name: Organize files
       id: organize
-      if: !cancelled()
+      if: ${{ env.UPLOAD_FIRMWARE == 'true' && !cancelled() }}
       run: |
-        # 自动寻找生成的固件目录
         FIRMWARE_PATH=$(find openwrt/bin/targets -name "*generic*" -type d | head -n 1)
         if [ -z "$FIRMWARE_PATH" ]; then
           echo "错误：未找到固件目录，正在打印 bin 目录结构进行排查："
@@ -105,17 +104,16 @@ jobs:
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
-
     - name: Upload firmware directory
       uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
+      if: ${{ steps.organize.outputs.status == 'success' && !cancelled() }}
       with:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}
 
     - name: Generate release tag
       id: tag
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      if: ${{ env.UPLOAD_RELEASE == 'true' && !cancelled() }}
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         touch release.txt
@@ -125,7 +123,7 @@ jobs:
 
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
-      if: steps.tag.outputs.status == 'success' && !cancelled()
+      if: ${{ steps.tag.outputs.status == 'success' && !cancelled() }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
