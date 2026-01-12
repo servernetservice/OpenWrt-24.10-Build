@@ -1,15 +1,14 @@
 #!/bin/bash
-#
-# Copyright (c) 2019-2020 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
-# https://github.com/P3TERX/Actions-OpenWrt
-# File name: diy-part2.sh
-# Description: OpenWrt DIY script part 2 (After Update feeds)
-#
 
 # 修改默认主题为 bootstrap
-# OpenWrt 默认通常就是 bootstrap，这里确保它被选中
 sed -i 's/luci-theme-bootstrap/luci-theme-bootstrap/g' feeds/luci/collections/luci/Makefile
+
+# 修复某些插件可能导致的依赖冲突
+# 移除可能冲突的重复包
+rm -rf feeds/packages/net/smartdns
+rm -rf feeds/luci/applications/luci-app-smartdns
+rm -rf feeds/luci/applications/luci-app-passwall
+
+# 重新同步 feeds 以确保使用我们添加的第三方源
+./scripts/feeds update -a
+./scripts/feeds install -a
