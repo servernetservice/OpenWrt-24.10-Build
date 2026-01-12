@@ -91,12 +91,20 @@ jobs:
 
     - name: Organize files
       id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      if: !cancelled()
       run: |
-        cd openwrt/bin/targets/*/*
+        # 自动寻找生成的固件目录
+        FIRMWARE_PATH=$(find openwrt/bin/targets -name "*generic*" -type d | head -n 1)
+        if [ -z "$FIRMWARE_PATH" ]; then
+          echo "错误：未找到固件目录，正在打印 bin 目录结构进行排查："
+          ls -R openwrt/bin
+          exit 1
+        fi
+        cd "$FIRMWARE_PATH"
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
+
 
     - name: Upload firmware directory
       uses: actions/upload-artifact@main
